@@ -27,6 +27,32 @@ namespace Platform
                 app.UseDeveloperExceptionPage();
             }
 
+            app.Use(async (context, next) =>
+            {
+                await next();
+                await context.Response.WriteAsync($"\nStatus Code: {context.Response.StatusCode}");
+            });
+
+            app.Use(async (context, next) =>
+            {
+                if (context.Request.Path == "/short")
+                {
+                    await context.Response.WriteAsync("Request Short  Circuited");
+                }else
+                    await next();
+            });
+
+            app.Use(async (context, next) =>
+            {
+                if(context.Request.Method == "GET" && context.Request.Query["custom"] == "true")
+                {
+                    await context.Response.WriteAsync("Custom Middleware\n");
+                }
+                await next();
+            });
+
+            app.UseMiddleware<QueryStringMiddleWare>();
+
             app.UseRouting();
 
             app.UseEndpoints(endpoints =>
