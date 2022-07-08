@@ -1,4 +1,4 @@
-﻿namespace Platform.Platform
+﻿namespace Platform
 {
     public class MessageOptions
     {
