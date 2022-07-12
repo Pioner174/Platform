@@ -23,31 +23,23 @@ namespace Platform
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-
-            app.UseMiddleware<LocationMiddleware>(); 
+            
+            app.UseDeveloperExceptionPage();
 
 
-            app.Map("/branch", branch =>
-            {
-                branch.Run(new QueryStringMiddleWare().Invoke);
-            });
-
-
-            app.UseMiddleware<QueryStringMiddleWare>();
+            app.UseMiddleware<Population>();
+            app.UseMiddleware<Capital>();
 
             app.UseRouting();
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGet("/", async context =>
-                {
-                    await context.Response.WriteAsync("Hello World!");
-                });
+                endpoints.MapGet("routing", async context => { await context.Response.WriteAsync("Request was routed"); });
+
             });
+
+            app.Use(async (context, next) => await context.Response.WriteAsync("Terminal middleware reached"));
+
         }
     }
 }
