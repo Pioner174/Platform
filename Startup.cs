@@ -27,15 +27,23 @@ namespace Platform
             app.UseDeveloperExceptionPage();
 
 
-            app.UseMiddleware<Population>();
-            app.UseMiddleware<Capital>();
+            //app.UseMiddleware<Population>();
+            //app.UseMiddleware<Capital>();
 
             app.UseRouting();
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGet("routing", async context => { await context.Response.WriteAsync("Request was routed"); });
-
+                endpoints.Map("{first}/{second}/{third}", async context =>
+                {
+                    await context.Response.WriteAsync("Request was routed\n");
+                    foreach (var kvp in context.Request.RouteValues)
+                    {
+                        await context.Response.WriteAsync($"{kvp.Key}:{kvp.Value}\n");
+                    }
+                });
+                endpoints.MapGet("capital/{country}", Capital.Endpoint);
+                endpoints.Map("population/{city}", Population.Endpoint);
             });
 
             app.Use(async (context, next) => await context.Response.WriteAsync("Terminal middleware reached"));
