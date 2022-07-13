@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using System;
@@ -43,7 +44,7 @@ namespace Platform
                     }
                 });
                 endpoints.MapGet("capital/{country}", Capital.Endpoint);
-                endpoints.Map("population/{city}", Population.Endpoint);
+                endpoints.Map("size/{city}", Population.Endpoint).WithMetadata(new RouteNameMetadata("population"));
             });
 
             app.Use(async (context, next) => await context.Response.WriteAsync("Terminal middleware reached"));
