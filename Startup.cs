@@ -35,7 +35,7 @@ namespace Platform
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.Map("{first}/{second}/{third}", async context =>
+                endpoints.Map("{first:alpha:length(3)}/{second:bool}", async context =>
                 {
                     await context.Response.WriteAsync("Request was routed\n");
                     foreach (var kvp in context.Request.RouteValues)
@@ -43,8 +43,12 @@ namespace Platform
                         await context.Response.WriteAsync($"{kvp.Key}:{kvp.Value}\n");
                     }
                 });
-                endpoints.MapGet("capital/{country}", Capital.Endpoint);
-                endpoints.Map("size/{city}", Population.Endpoint).WithMetadata(new RouteNameMetadata("population"));
+                endpoints.MapGet("capital/{country:regex(^uk|france|monaco$)}", Capital.Endpoint);
+                endpoints.Map("size/{city?}", Population.Endpoint).WithMetadata(new RouteNameMetadata("population"));
+                endpoints.MapFallback(async context =>
+                {
+                    await context.Response.WriteAsync("Routed to fallback endpoint");
+                });
             });
 
             app.Use(async (context, next) => await context.Response.WriteAsync("Terminal middleware reached"));
