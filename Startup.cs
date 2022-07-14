@@ -19,6 +19,10 @@ namespace Platform
         public void ConfigureServices(IServiceCollection services)
         {
             services.Configure<MessageOptions>(opts => { opts.CityName = "Albany"; });
+            services.Configure<RouteOptions>(opts =>
+            {
+                opts.ConstraintMap.Add("countryName", typeof(CountryRouteConstraint));
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -35,6 +39,16 @@ namespace Platform
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.Map("{number:int}", async context =>
+                {
+                    await context.Response.WriteAsync("Routed to the int endpoint");
+                }).Add(b => ((RouteEndpointBuilder)b).Order = 1);//установка приоритета для конечной точки
+
+                endpoints.Map("{number:double}", async context =>
+                {
+                    await context.Response.WriteAsync("Routed to the double endpoint");
+                }).Add(b=>((RouteEndpointBuilder)b).Order=2);
+
                 endpoints.Map("{first:alpha:length(3)}/{second:bool}", async context =>
                 {
                     await context.Response.WriteAsync("Request was routed\n");
@@ -43,7 +57,8 @@ namespace Platform
                         await context.Response.WriteAsync($"{kvp.Key}:{kvp.Value}\n");
                     }
                 });
-                endpoints.MapGet("capital/{country:regex(^uk|france|monaco$)}", Capital.Endpoint);
+
+                endpoints.MapGet("capital/{country:countryName}", Capital.Endpoint);
                 endpoints.Map("size/{city?}", Population.Endpoint).WithMetadata(new RouteNameMetadata("population"));
                 endpoints.MapFallback(async context =>
                 {

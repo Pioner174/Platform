@@ -21,6 +21,9 @@ namespace Platform
                 case "france":
                     capital = "Paris";
                     break;
+                case "russia":
+                    capital = "Kiev";
+                    break;
                 case "monaco":
                     LinkGenerator generator = context.RequestServices.GetService<LinkGenerator>();
                     string url = generator.GetPathByRouteValues(context, "population", new { city = country });
