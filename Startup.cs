@@ -37,17 +37,33 @@ namespace Platform
 
             app.UseRouting();
 
+            // между UseRouting и UseEndpoints компонент промежуточного ПО
+            // Может видеть какая конечная точка была выбранна
+            app.Use(async (context, next) => 
+            {
+                Endpoint end = context.GetEndpoint();
+                if(end != null)
+                {
+                    await context.Response.WriteAsync($"{end.DisplayName} Selected \n");
+                }
+                else
+                {
+                    await context.Response.WriteAsync($"No endpoint selected \n");
+                }
+                await next();
+            });
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.Map("{number:int}", async context =>
                 {
                     await context.Response.WriteAsync("Routed to the int endpoint");
-                }).Add(b => ((RouteEndpointBuilder)b).Order = 1);//установка приоритета для конечной точки
+                }).WithDisplayName("Int Endpoint").Add(b => ((RouteEndpointBuilder)b).Order = 1);//установка приоритета для конечной точки
 
                 endpoints.Map("{number:double}", async context =>
                 {
                     await context.Response.WriteAsync("Routed to the double endpoint");
-                }).Add(b=>((RouteEndpointBuilder)b).Order=2);
+                }).WithDisplayName("Double endpoint").Add(b=>((RouteEndpointBuilder)b).Order=2);
 
                 endpoints.Map("{first:alpha:length(3)}/{second:bool}", async context =>
                 {
