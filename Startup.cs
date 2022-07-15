@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Platform.Services;
 
 namespace Platform
 {
@@ -18,15 +19,11 @@ namespace Platform
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.Configure<MessageOptions>(opts => { opts.CityName = "Albany"; });
-            services.Configure<RouteOptions>(opts =>
-            {
-                opts.ConstraintMap.Add("countryName", typeof(CountryRouteConstraint));
-            });
+            services.AddSingleton<IResponseFormatter, HtmlResponseFormatter>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IResponseFormatter formatter)
         {
             
             app.UseDeveloperExceptionPage();
@@ -37,52 +34,28 @@ namespace Platform
 
             app.UseRouting();
 
-            // между UseRouting и UseEndpoints компонент промежуточного ПО
-            // Может видеть какая конечная точка была выбранна
-            app.Use(async (context, next) => 
+            app.UseMiddleware<WeatherMiddleware>();
+
+            app.Use(async (context, next) =>
             {
-                Endpoint end = context.GetEndpoint();
-                if(end != null)
+                if (context.Request.Path == "/middleware/function")
                 {
-                    await context.Response.WriteAsync($"{end.DisplayName} Selected \n");
+                    await formatter.Format(context, "Middleware Function: It is snowing in Chicago");
                 }
                 else
-                {
-                    await context.Response.WriteAsync($"No endpoint selected \n");
-                }
-                await next();
+                    await next();
             });
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.Map("{number:int}", async context =>
+                endpoints.Map("/endpoint/class", WeatherEndpoint.Endpoint);
+                endpoints.Map("/endpoint/function", async context =>
                 {
-                    await context.Response.WriteAsync("Routed to the int endpoint");
-                }).WithDisplayName("Int Endpoint").Add(b => ((RouteEndpointBuilder)b).Order = 1);//установка приоритета для конечной точки
-
-                endpoints.Map("{number:double}", async context =>
-                {
-                    await context.Response.WriteAsync("Routed to the double endpoint");
-                }).WithDisplayName("Double endpoint").Add(b=>((RouteEndpointBuilder)b).Order=2);
-
-                endpoints.Map("{first:alpha:length(3)}/{second:bool}", async context =>
-                {
-                    await context.Response.WriteAsync("Request was routed\n");
-                    foreach (var kvp in context.Request.RouteValues)
-                    {
-                        await context.Response.WriteAsync($"{kvp.Key}:{kvp.Value}\n");
-                    }
-                });
-
-                endpoints.MapGet("capital/{country:countryName}", Capital.Endpoint);
-                endpoints.Map("size/{city?}", Population.Endpoint).WithMetadata(new RouteNameMetadata("population"));
-                endpoints.MapFallback(async context =>
-                {
-                    await context.Response.WriteAsync("Routed to fallback endpoint");
+                    await formatter.Format(context,"Endpoint Function: It is sunny in LA");
                 });
             });
 
-            app.Use(async (context, next) => await context.Response.WriteAsync("Terminal middleware reached"));
+            
 
         }
     }
