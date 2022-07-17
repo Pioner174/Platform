@@ -48,7 +48,8 @@ namespace Platform
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.Map("/endpoint/class", WeatherEndpoint.Endpoint);
+                //endpoints.Map("/endpoint/class", WeatherEndpoint.Endpoint);
+                endpoints.MapEndpoint<WeatherEndpoint>("/endpoint/class");
                 endpoints.Map("/endpoint/function", async context =>
                 {
                     await formatter.Format(context,"Endpoint Function: It is sunny in LA");

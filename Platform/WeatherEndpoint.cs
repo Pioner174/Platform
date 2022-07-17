@@ -7,9 +7,15 @@ namespace Platform
 {
     public class WeatherEndpoint
     {
-        public static async Task Endpoint(HttpContext context)
+        IResponseFormatter formatter;
+
+        public WeatherEndpoint(IResponseFormatter respFormatter)
         {
-            IResponseFormatter formatter = context.RequestServices.GetRequiredService<IResponseFormatter>();
+            formatter = respFormatter;
+        }
+
+        public  async Task Endpoint(HttpContext context)
+        {
             await formatter.Format(context,"Endpoint Class: It is cloudy in Milan");
         }
     }
