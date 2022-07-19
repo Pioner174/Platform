@@ -8,23 +8,22 @@ namespace Platform
     {
         RequestDelegate next;
 
-        IResponseFormatter formatter;
-        public WeatherMiddleware(RequestDelegate next, IResponseFormatter respformatter) : this(next)
+        //IResponseFormatter formatter;
+        public WeatherMiddleware(RequestDelegate nextDelegate) 
         {
-            formatter = respformatter;
+            next = nextDelegate;
         }
 
-        public WeatherMiddleware(RequestDelegate requestDelegate)
-        {
-            next = requestDelegate;
-        }
 
-        public async Task Invoke(HttpContext context)
+        public async Task Invoke(HttpContext context, IResponseFormatter formatter, IResponseFormatter formatter2, IResponseFormatter formatter3)
         {
             if(context.Request.Path == "/middleware/class")
             {
-                await formatter.Format(context,"Middleware Class: It is raining in London");
-            }else
+                await formatter.Format(context,string.Empty);
+                await formatter2.Format(context, string.Empty);
+                await formatter3.Format(context, string.Empty);
+            }
+            else
                 await next(context);
         }
     }

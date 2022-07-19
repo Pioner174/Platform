@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Platform.Services;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace Microsoft.AspNetCore.Builder
 {
@@ -20,7 +21,15 @@ namespace Microsoft.AspNetCore.Builder
 
             T endpointInstance = ActivatorUtilities.CreateInstance<T>(app.ServiceProvider);
 
-            app.Map(path, (RequestDelegate)methodInfo.CreateDelegate(typeof(RequestDelegate), endpointInstance));
+            //app.Map(path, (RequestDelegate)methodInfo.CreateDelegate(typeof(RequestDelegate), endpointInstance));
+
+            ParameterInfo[] parameters = methodInfo.GetParameters();
+            app.Map(path, context =>
+            {
+                T endPointInstance = ActivatorUtilities.CreateInstance<T>(context.RequestServices);
+                return (Task)methodInfo.Invoke(endpointInstance, parameters.Select(p => p.ParameterType == typeof(HttpContext) ?
+            context : context.RequestServices.GetService(p.ParameterType)).ToArray());
+        }); 
         }
     }
 }
