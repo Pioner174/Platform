@@ -6,5 +6,7 @@ namespace Platform.Services
     public interface IResponseFormatter
     {
         Task Format(HttpContext context, string contenxt);
+
+        public bool RichOutput => false;
     }
 }
