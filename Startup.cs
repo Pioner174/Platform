@@ -46,16 +46,28 @@ namespace Platform
             {
                 app.UseHsts();
             }
-           
+            app.UseStaticFiles();
+
             app.UseHttpsRedirection();
 
-            app.UseCookiePolicy();
+            app.UseStatusCodePages("text/html", ResponseString.DefaultResponse);
 
-            app.UseStaticFiles();
+            app.UseCookiePolicy();
 
             app.UseMiddleware<ConsentMiddleware>();
 
             app.UseSession();
+
+            app.Use(async (context, next) =>
+            {
+                if (context.Request.Path == "/error")
+                {
+                    context.Response.StatusCode = StatusCodes.Status404NotFound;
+                    await Task.CompletedTask;
+                }
+                else
+                    await next();
+            } );
 
             app.Run(context =>
             {
