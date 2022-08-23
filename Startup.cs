@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.HostFiltering;
 using System;
 using System.Threading.Tasks;
 
@@ -31,6 +32,12 @@ namespace Platform
             {
                 opts.MaxAge = TimeSpan.FromDays(1);
                 opts.IncludeSubDomains = true;
+            });
+
+            services.Configure<HostFilteringOptions>(opts =>
+            {
+                opts.AllowedHosts.Clear();
+                opts.AllowedHosts.Add("*.example.com");
             });
         }
 
