@@ -15,29 +15,9 @@ namespace Platform
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.Configure<CookiePolicyOptions>(opts =>
+            services.AddDistributedMemoryCache(opts =>
             {
-                opts.CheckConsentNeeded = context => true;
-            });
-
-            services.AddDistributedMemoryCache();
-
-            services.AddSession(options =>
-            {
-                options.IdleTimeout = TimeSpan.FromMinutes(30);
-                options.Cookie.IsEssential = true;
-            });
-
-            services.AddHsts(opts =>
-            {
-                opts.MaxAge = TimeSpan.FromDays(1);
-                opts.IncludeSubDomains = true;
-            });
-
-            services.Configure<HostFilteringOptions>(opts =>
-            {
-                opts.AllowedHosts.Clear();
-                opts.AllowedHosts.Add("*.example.com");
+                opts.SizeLimit = 200;
             });
         }
 
@@ -46,8 +26,7 @@ namespace Platform
         {
             if (env.IsDevelopment())
             {
-                app.UseExceptionHandler("/error.html");
-                //app.UseDeveloperExceptionPage();
+                app.UseDeveloperExceptionPage();
             }
             else
             {
@@ -55,34 +34,17 @@ namespace Platform
             }
             app.UseStaticFiles();
 
-            app.UseHttpsRedirection();
+            app.UseRouting();
 
-            app.UseStatusCodePages("text/html", ResponseString.DefaultResponse);
-
-            app.UseCookiePolicy();
-
-            app.UseMiddleware<ConsentMiddleware>();
-
-            app.UseSession();
-
-            app.Use(async (context, next) =>
+            app.UseEndpoints(endpoints =>
             {
-                if (context.Request.Path == "/error")
+                endpoints.MapEndpoint<SumEndpoint>("/sum/{count:int=1000000000}");
+
+                endpoints.MapGet("/", async context =>
                 {
-                    context.Response.StatusCode = StatusCodes.Status404NotFound;
-                    await Task.CompletedTask;
-                }
-                else
-                    await next();
-            } );
-
-            app.Run(context =>
-            {
-                throw new Exception("Что то пошло не так!");
+                    await context.Response.WriteAsync("Hello world!");
+                });
             });
-
-
-
         }
     }
 }
