@@ -7,7 +7,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.HostFiltering;
 using System;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Platform.Services;
+using Platform.Models;
 
 namespace Platform
 {
@@ -33,6 +35,11 @@ namespace Platform
 
             services.AddResponseCaching();
             services.AddSingleton<IResponseFormatter, HtmlResponseFormatter>();
+
+            services.AddDbContext<CalculationContext>(opts =>
+            {
+                opts.UseSqlServer(_config["ConnectionStrings:CalcConnection"]);
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
