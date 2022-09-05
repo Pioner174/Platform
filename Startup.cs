@@ -1,15 +1,12 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.AspNetCore.HostFiltering;
-using System;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using Platform.Services;
 using Platform.Models;
+using Platform.Services;
 
 namespace Platform
 {
@@ -39,11 +36,17 @@ namespace Platform
             services.AddDbContext<CalculationContext>(opts =>
             {
                 opts.UseSqlServer(_config["ConnectionStrings:CalcConnection"]);
+                opts.EnableSensitiveDataLogging(true);
             });
+
+            services.AddTransient<SeedData>();
+
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env,
+            IHostApplicationLifetime lifetime, SeedData seedData)
         {
             if (env.IsDevelopment())
             {
@@ -69,6 +72,17 @@ namespace Platform
                     await context.Response.WriteAsync("Hello world!");
                 });
             });
+
+            bool cmdLineInit = (_config["INITDB"] ?? "false") == "true";
+
+            if(env.IsDevelopment() || cmdLineInit)
+            {
+                seedData.SeedDatabase();
+                if (cmdLineInit)
+                {
+                    lifetime.StopApplication();
+                }
+            }
         }
     }
 }

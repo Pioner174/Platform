@@ -4,28 +4,39 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.AspNetCore.Routing;
 using Platform.Services;
+using System.Linq;
+using Platform.Models;
 
 namespace Platform
 {
     public class SumEndpoint
     {
-        public async Task Endpoint(HttpContext context, IDistributedCache cache, IResponseFormatter formatter, LinkGenerator generator)
+        public async Task Endpoint(HttpContext context, CalculationContext dataContext)
         {
             int count = int.Parse((string)context.Request.RouteValues["count"]);
-            long total = 0;
-            for (int i = 0; i <= count; i++)
+            long total = dataContext.Calculatons.FirstOrDefault(c => c.Count == count)?.Result ?? 0;
+
+            if (total == 0)
             {
-                total += i;
+                for (int i = 0; i <= count; i++)
+                {
+                    total += i;
+                }
+
+                dataContext.Calculatons!.Add(new Calculaton()
+                {
+                    Count = count,
+                    Result = total
+                });
+                await dataContext.SaveChangesAsync();
             }
 
+            
 
             string totalString = $"({DateTime.Now.ToLongTimeString() }) {total}";
 
-            context.Response.Headers["Cache-Control"] = "public, max-age=120";
-
-            string url = generator.GetPathByRouteValues(context, null, new { count = count });
-
-            await formatter.Format(context, $"<div>({DateTime.Now.ToLongTimeString()}) Total for {count}\nvalues:</div><div>{totalString}</div>\n <a href={url}>Reload</a>");
+            await context.Response.WriteAsync($"({DateTime.Now.ToLongTimeString()}) Total for {count}" +
+                $" values:\n{totalString}\n");
         }
     }
 }
